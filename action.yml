@@ -44,8 +44,9 @@ runs:
         sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
         echo 'export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"' >> ~/.bashrc
         source ~/.bashrc
+        solana --version
       shell: bash
-
+      
     - name: Install Anchor CLI
       run: npm install -g @coral-xyz/anchor-cli@${{ inputs.anchor-version }}
       shell: bash
