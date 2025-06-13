@@ -31,7 +31,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Solana Environment 🌞
-        uses: your-username/solana-setup-action@v1
+        uses: DhruvWebDev/solana-setup-action@v1
         with:
           node-version: '18'
           solana-cli-version: '1.18.18'
