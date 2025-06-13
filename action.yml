@@ -40,11 +40,12 @@ runs:
         node-version: ${{ inputs.node-version }}
 
     - name: Install Solana CLI
-      run: |
-         sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
-         echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
-         solana --version
       shell: bash
+      run: |
+        sh -c "$(curl -sSfL https://release.anza.xyz/${{ inputs.solana-cli-version }}/install)"
+        export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+        echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+        solana --version
         
     - name: Install Anchor CLI
       run: npm install -g @coral-xyz/anchor-cli@${{ inputs.anchor-version }}
