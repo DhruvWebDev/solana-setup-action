@@ -41,8 +41,9 @@ runs:
 
     - name: Install Solana CLI
       run: |
-        sh -c "$(curl -sSfL https://release.solana.com/v${{ inputs.solana-cli-version }}/install)"
-        echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+        sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
+        echo 'export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"' >> ~/.bashrc
+        source ~/.bashrc
       shell: bash
 
     - name: Install Anchor CLI
