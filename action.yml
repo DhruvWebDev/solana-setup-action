@@ -42,19 +42,37 @@ runs:
     - name: Install Solana CLI
       shell: bash
       run: |
-        sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
-        export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-        echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
-        solana --version
-        
+       if [ -n "${{ inputs.solana-cli-version }}" ]; then
+         sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
+         export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+         echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+         solana --version    else
+        echo "Skipping solana cli installation as no version was provided."
+       fi   
+       
     - name: Install Anchor CLI
-      run: npm install -g @coral-xyz/anchor-cli@${{ inputs.anchor-version }}
+      run: |
+       if [ -n "${{ inputs.anchor-version }}" ]; then
+        npm install -g @coral-xyz/anchor-cli@${{ inputs.anchor-version }}
+       else
+        echo "Skipping anchor cli  installation as no version was provided."
+       fi
       shell: bash
 
     - name: Install pnpm
-      run: npm install -g pnpm@${{ inputs.pnpm-package-manager }}
+      run: |
+       if [ -n "${{ inputs.pnpm-package-manager }}" ]; then
+        npm install -g pnpm@${{ inputs.pnpm-package-manager }}
+       else
+        echo "Skipping pnpm package installation as no version was provided."
+       fi
       shell: bash
 
     - name: Install Yarn
-      run: npm install -g yarn@${{ inputs.yarn-package-manager }}
+      run: |
+       if [ -n "${{ inputs.yarn-package-manager }}" ]; then
+        npm install -g yarn@${{ inputs.yarn-package-manager }}
+       else
+        echo "Skipping yarn package installation as no version was provided."
+       fi
       shell: bash
