@@ -2,7 +2,7 @@ name: 'Solana Setup Action'
 description: 'Reusable GitHub Action to set up a full Solana development environment'
 
 branding:
-  icon: 'package'   # Valid Octicon (e.g., package, terminal, gear, etc.)
+  icon: 'package'
   color: 'blue'
 
 inputs:
@@ -14,22 +14,22 @@ inputs:
   solana-cli-version:
     description: 'Solana CLI version to install'
     required: false
-    default: '1.18.18'
+    default: ''
     
   anchor-version:
     description: 'Anchor CLI version to install'
     required: false
-    default: '0.30.1'
+    default: ''
     
   pnpm-package-manager:
     description: 'pnpm version to install'
     required: false
-    default: '8.15.5'
+    default: ''
     
   yarn-package-manager:
     description: 'Yarn version to install'
     required: false
-    default: '1.22.19'
+    default: ''
 
 runs:
   using: 'composite'
@@ -38,41 +38,50 @@ runs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ inputs.node-version }}
-
+        
     - name: Install Solana CLI
       shell: bash
       run: |
-       if [ -n "${{ inputs.solana-cli-version }}" ]; then
-         sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
-         export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
-         echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
-         solana --version    else
-        echo "Skipping solana cli installation as no version was provided."
-       fi   
-       
+        if [ -n "${{ inputs.solana-cli-version }}" ]; then
+          echo "Installing Solana CLI..."
+          sh -c "$(curl -sSfL https://release.anza.xyz/stable/install)"
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          echo "$HOME/.local/share/solana/install/active_release/bin" >> $GITHUB_PATH
+          solana --version
+        else
+          echo "Skipping Solana CLI installation as no version was provided."
+        fi
+
     - name: Install Anchor CLI
-      run: |
-       if [ -n "${{ inputs.anchor-version }}" ]; then
-        npm install -g @coral-xyz/anchor-cli@${{ inputs.anchor-version }}
-       else
-        echo "Skipping anchor cli  installation as no version was provided."
-       fi
       shell: bash
+      run: |
+        if [ -n "${{ inputs.anchor-version }}" ]; then
+          echo "Installing Rust and Anchor CLI..."
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          source "$HOME/.cargo/env"
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+          cargo install --git https://github.com/coral-xyz/anchor --tag v${{ inputs.anchor-version }} anchor-cli
+          anchor --version
+        else
+          echo "Skipping Anchor CLI installation as no version was provided."
+        fi
 
     - name: Install pnpm
-      run: |
-       if [ -n "${{ inputs.pnpm-package-manager }}" ]; then
-        npm install -g pnpm@${{ inputs.pnpm-package-manager }}
-       else
-        echo "Skipping pnpm package installation as no version was provided."
-       fi
       shell: bash
+      run: |
+        if [ -n "${{ inputs.pnpm-package-manager }}" ]; then
+          echo "Installing pnpm..."
+          npm install -g pnpm@${{ inputs.pnpm-package-manager }}
+        else
+          echo "Skipping pnpm installation as no version was provided."
+        fi
 
     - name: Install Yarn
-      run: |
-       if [ -n "${{ inputs.yarn-package-manager }}" ]; then
-        npm install -g yarn@${{ inputs.yarn-package-manager }}
-       else
-        echo "Skipping yarn package installation as no version was provided."
-       fi
       shell: bash
+      run: |
+        if [ -n "${{ inputs.yarn-package-manager }}" ]; then
+          echo "Installing Yarn..."
+          npm install -g yarn@${{ inputs.yarn-package-manager }}
+        else
+          echo "Skipping Yarn installation as no version was provided."
+        fi
