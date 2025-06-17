@@ -60,7 +60,10 @@ runs:
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
           source "$HOME/.cargo/env"
           echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-          cargo install --git https://github.com/coral-xyz/anchor --tag v${{ inputs.anchor-version }} anchor-cli
+          cargo install --git https://github.com/coral-xyz/anchor avm --force
+          avm --version
+          avm install ${{inputs.anchor-version}}
+          avm use ${{inputs.anchor-version}}
           anchor --version
         else
           echo "Skipping Anchor CLI installation as no version was provided."
