@@ -35,6 +35,10 @@ inputs:
     description: 'Enable Sec3 X-Ray Analysis'
     required: false
     default: 'false'
+  working-directory:
+    description: 'working directory'
+    required: false
+    default: '.'
 
 runs:
   using: 'composite'
@@ -100,6 +104,6 @@ runs:
       run: |
         echo "Running X-Ray static analysis..."
         docker run --rm \
-          --volume "${{ github.workspace }}/swap:/project" \
+          --volume "${{ github.workspace }}/${{inputs.working-directory}}:/project" \
           ghcr.io/sec3-product/x-ray:latest \
           /project
