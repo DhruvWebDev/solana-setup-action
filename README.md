@@ -11,6 +11,7 @@
 ✅ Installs **Solana CLI** (official releases from [anza.xyz](https://release.anza.xyz))  
 ✅ Installs **Anchor CLI**  
 ✅ Installs **pnpm** and **Yarn** if needed  
+✅ Setup **x-ray**(static analysis) to identify vulnerability in the contract
 ✅ Works in all Linux-based GitHub runners
 
 ---
@@ -31,13 +32,15 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Solana Environment 🌞
-        uses: DhruvWebDev/solana-setup-action@v1
+        uses: DhruvWebDev/solana-setup-action@v0.0.7
         with:
           node-version: '18'
           solana-cli-version: '1.18.18'
           anchor-version: '0.30.1'
           pnpm-package-manager: '8.15.5'
           yarn-package-manager: '1.22.19'
+          x-ray-enabled: true
+          working-directory: ./path
 
       - name: Check Solana Installation
         run: |
