@@ -35,19 +35,29 @@ inputs:
     description: 'Enable Sec3 X-Ray Analysis'
     required: false
     default: 'false'
+    
   working-directory:
-    description: 'working directory'
+    description: 'Working directory for X-Ray analysis'
     required: false
     default: '.'
 
 runs:
   using: 'composite'
   steps:
+    # 1️⃣ Install required system dependencies for Solana, Anchor, hidapi, etc.
+    - name: Install system dependencies
+      shell: bash
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y libudev-dev pkg-config build-essential curl git
+
+    # 2️⃣ Install Node.js
     - name: Install Node.js
       uses: actions/setup-node@v4
       with:
         node-version: ${{ inputs.node-version }}
-        
+
+    # 3️⃣ Install Solana CLI
     - name: Install Solana CLI
       shell: bash
       run: |
@@ -61,24 +71,26 @@ runs:
           echo "Skipping Solana CLI installation as no version was provided."
         fi
 
+    # 4️⃣ Install Anchor CLI via AVM
     - name: Install Anchor CLI
       shell: bash
       run: |
         if [ -n "${{ inputs.anchor-version }}" ]; then
-        echo "Installing Rust and Anchor CLI..."
-        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-        source "$HOME/.cargo/env"
-        echo "$HOME/.cargo/bin" >> $GITHUB_PATH
-        cargo install --git https://github.com/coral-xyz/anchor avm --force
-        avm --version
-        avm install ${{inputs.anchor-version}}
-        avm use ${{inputs.anchor-version}}
-        echo "$HOME/.avm/bin" >> $GITHUB_PATH
-        anchor --version
-       else
-        echo "Skipping Anchor CLI installation as no version was provided."
-       fi
+          echo "Installing Rust and Anchor CLI..."
+          curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+          source "$HOME/.cargo/env"
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+          cargo install --git https://github.com/coral-xyz/anchor avm --force
+          avm --version
+          avm install ${{ inputs.anchor-version }}
+          avm use ${{ inputs.anchor-version }}
+          echo "$HOME/.avm/bin" >> $GITHUB_PATH
+          anchor --version
+        else
+          echo "Skipping Anchor CLI installation as no version was provided."
+        fi
 
+    # 5️⃣ Install pnpm (optional)
     - name: Install pnpm
       shell: bash
       run: |
@@ -89,6 +101,7 @@ runs:
           echo "Skipping pnpm installation as no version was provided."
         fi
 
+    # 6️⃣ Install Yarn (optional)
     - name: Install Yarn
       shell: bash
       run: |
@@ -99,12 +112,13 @@ runs:
           echo "Skipping Yarn installation as no version was provided."
         fi
 
+    # 7️⃣ Run Sec3 X-Ray analysis (optional)
     - name: Run Sec3 X-Ray
-      if: ${{ inputs.x-ray-enabled == 'true'}}
+      if: ${{ inputs.x-ray-enabled == 'true' }}
       shell: bash
       run: |
         echo "Running X-Ray static analysis..."
         docker run --rm \
-          --volume "${{ github.workspace }}/${{inputs.working-directory}}:/project" \
+          --volume "${{ github.workspace }}/${{ inputs.working-directory }}:/project" \
           ghcr.io/sec3-product/x-ray:latest \
           /project
