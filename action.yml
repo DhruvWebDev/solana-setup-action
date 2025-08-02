@@ -85,6 +85,7 @@ runs:
           avm install ${{ inputs.anchor-version }}
           avm use ${{ inputs.anchor-version }}
           echo "$HOME/.avm/bin" >> $GITHUB_PATH
+          echo "$HOME/.avm/bin" >> $GITHUB_PATH        # ✅ future steps
           anchor --version
         else
           echo "Skipping Anchor CLI installation as no version was provided."
