@@ -245,7 +245,6 @@ runs:
       run: |
         if [ -n "${{ inputs.test-script }}" ]; then
           echo "Running tests: ${{ inputs.test-script }}"
-          cd "${{ inputs.working-directory }}"
           
           # Check if we need local validator for testing
           NETWORK_URL="${{ inputs.solana-network-url }}"
@@ -269,7 +268,6 @@ runs:
       run: |
         if [ -n "${{ inputs.deploy-script }}" ]; then
           echo "Running deploy: ${{ inputs.deploy-script }}"
-          cd "${{ inputs.working-directory }}"
           
           # Check if we need local validator for deployment
           NETWORK_URL="${{ inputs.solana-network-url }}"
