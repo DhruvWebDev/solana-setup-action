@@ -31,6 +31,19 @@ inputs:
     required: false
     default: ''
 
+  build-script:
+    description: 'Script/command to build the project (e.g., anchor build)'
+    required: false
+    default: ''
+  test-script:
+    description: 'Script/command to test the project (e.g., anchor test)'
+    required: false
+    default: ''
+  deploy-script:
+    description: 'Script/command to deploy the project (e.g., anchor deploy)'
+    required: false
+    default: ''
+
   x-ray-enabled:
     description: 'Enable Sec3 X-Ray Analysis'
     required: false
@@ -104,6 +117,26 @@ runs:
           echo "Skipping Yarn installation as no version was provided."
         fi
 
+    # 7️⃣ Install project dependencies (optional)
+    - name: Install Project Dependencies
+      shell: bash
+      run: |
+        cd "${{ inputs.working-directory }}"
+        if [ -f "package.json" ]; then
+          if [ -f "pnpm-lock.yaml" ]; then
+            echo "Installing dependencies with pnpm..."
+            pnpm install
+          elif [ -f "yarn.lock" ]; then
+            echo "Installing dependencies with yarn..."
+            yarn install
+          else
+            echo "Installing dependencies with npm..."
+            npm install
+          fi
+        else
+          echo "No package.json found, skipping dependency installation."
+        fi
+
     # 7️⃣ Run Sec3 X-Ray analysis (optional)
     - name: Run Sec3 X-Ray
       if: ${{ inputs.x-ray-enabled == 'true' }}
@@ -114,3 +147,39 @@ runs:
           --volume "${{ github.workspace }}/${{ inputs.working-directory }}:/project" \
           ghcr.io/sec3-product/x-ray:latest \
           /project
+
+    # 8️⃣ Build step (optional)
+    - name: Build Project
+      shell: bash
+      run: |
+        if [ -n "${{ inputs.build-script }}" ]; then
+          echo "Running build: ${{ inputs.build-script }}"
+          cd "${{ inputs.working-directory }}"
+          eval "${{ inputs.build-script }}"
+        else
+          echo "Skipping build step as no script was provided."
+        fi
+
+    # 9️⃣ Test step (optional)
+    - name: Test Project
+      shell: bash
+      run: |
+        if [ -n "${{ inputs.test-script }}" ]; then
+          echo "Running tests: ${{ inputs.test-script }}"
+          cd "${{ inputs.working-directory }}"
+          eval "${{ inputs.test-script }}"
+        else
+          echo "Skipping test step as no script was provided."
+        fi
+
+    # 🔟 Deploy step (optional)
+    - name: Deploy Project
+      shell: bash
+      run: |
+        if [ -n "${{ inputs.deploy-script }}" ]; then
+          echo "Running deploy: ${{ inputs.deploy-script }}"
+          cd "${{ inputs.working-directory }}"
+          eval "${{ inputs.deploy-script }}"
+        else
+          echo "Skipping deploy step as no script was provided."
+        fi
