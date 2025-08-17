@@ -109,14 +109,9 @@ runs:
         solana config set -u ${{ inputs.solana-network-url }}
         solana-keygen new --no-bip39-passphrase
         solana address
-        if [ "${{ inputs.solana-network }}" = "localnet" ]; then
-          solana-test-validator --reset --quiet &
-          sleep 15
-          solana airdrop ${{ inputs.solana-airdrop-amount }}
-          solana balance
-        else
-          echo "Not using local network, skipping test validator and airdrop."
-        fi
+        sleep 15
+        solana airdrop ${{ inputs.solana-airdrop-amount }}
+        solana balance
 
     # 4️⃣ Install Anchor CLI via AVM
     - name: Install Anchor CLI
