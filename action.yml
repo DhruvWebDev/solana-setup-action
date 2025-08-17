@@ -106,7 +106,7 @@ runs:
       shell: bash
       run: |
         solana config get
-        solana config set -u ${{ inputs.solana-network }}
+        solana config set -u ${{ inputs.solana-network-url }}
         solana-keygen new --no-bip39-passphrase
         solana address
         if [ "${{ inputs.solana-network }}" = "localnet" ]; then
