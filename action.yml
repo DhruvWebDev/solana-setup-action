@@ -31,8 +31,8 @@ inputs:
     required: false
     default: ''
     
-  solana-network:
-    description: 'Solana network to use for deployment (e.g., localnet, devnet, mainnet-beta, testnet)'
+  solana-network-url:
+    description: 'Solana network url to use for deployment'
     required: false
     default: 'localnet'
     
