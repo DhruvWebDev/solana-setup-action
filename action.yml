@@ -119,7 +119,7 @@ runs:
           
           # Start local validator first
           echo "Starting local Solana validator..."
-          solana-test-validator --detach
+          solana-test-validator 
           sleep 15
           echo "Local validator started successfully"
           
