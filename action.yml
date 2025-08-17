@@ -187,8 +187,13 @@ runs:
     # 7️⃣ Install project dependencies (optional)
     - name: Install Project Dependencies
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
-        cd "${{ inputs.working-directory }}"
+        # Debug: Show current directory and contents
+        echo "Current working directory: $(pwd)"
+        echo "Directory contents:"
+        ls -la
+        
         if [ -f "package.json" ]; then
           if [ -f "pnpm-lock.yaml" ]; then
             echo "Installing dependencies with pnpm..."
@@ -207,10 +212,13 @@ runs:
     # 8️⃣ Wallet setup, airdrop, and deploy (optional)
     - name: Solana Wallet Setup & Airdrop
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
         if [ -n "${{ inputs.solana-wallet-setup }}" ]; then
           echo "Running wallet setup: ${{ inputs.solana-wallet-setup }}"
-          cd "${{ inputs.working-directory }}"
+          echo "Current working directory: $(pwd)"
+          echo "Directory contents:"
+          ls -la
           eval "${{ inputs.solana-wallet-setup }}"
         else
           echo "Skipping wallet setup as no script was provided."
@@ -222,6 +230,17 @@ runs:
       shell: bash
       run: |
         echo "Running X-Ray static analysis..."
+        echo "Working directory: ${{ inputs.working-directory }}"
+        echo "Full path: ${{ github.workspace }}/${{ inputs.working-directory }}"
+        
+        # Verify the directory exists
+        if [ ! -d "${{ github.workspace }}/${{ inputs.working-directory }}" ]; then
+          echo "Error: Directory ${{ github.workspace }}/${{ inputs.working-directory }} does not exist"
+          echo "Available directories in workspace:"
+          ls -la "${{ github.workspace }}"
+          exit 1
+        fi
+        
         docker run --rm \
           --volume "${{ github.workspace }}/${{ inputs.working-directory }}:/project" \
           ghcr.io/sec3-product/x-ray:latest \
@@ -230,10 +249,13 @@ runs:
     # 🔟 Build step (optional)
     - name: Build Project
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
         if [ -n "${{ inputs.build-script }}" ]; then
           echo "Running build: ${{ inputs.build-script }}"
-          cd "${{ inputs.working-directory }}"
+          echo "Current working directory: $(pwd)"
+          echo "Directory contents:"
+          ls -la
           eval "${{ inputs.build-script }}"
         else
           echo "Skipping build step as no script was provided."
@@ -242,9 +264,13 @@ runs:
     # 1️⃣1️⃣ Test step (optional)
     - name: Test Project
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
         if [ -n "${{ inputs.test-script }}" ]; then
           echo "Running tests: ${{ inputs.test-script }}"
+          echo "Current working directory: $(pwd)"
+          echo "Directory contents:"
+          ls -la
           
           # Check if we need local validator for testing
           NETWORK_URL="${{ inputs.solana-network-url }}"
@@ -265,9 +291,13 @@ runs:
     # 1️⃣2️⃣ Deploy step (optional)
     - name: Deploy Project
       shell: bash
+      working-directory: ${{ inputs.working-directory }}
       run: |
         if [ -n "${{ inputs.deploy-script }}" ]; then
           echo "Running deploy: ${{ inputs.deploy-script }}"
+          echo "Current working directory: $(pwd)"
+          echo "Directory contents:"
+          ls -la
           
           # Check if we need local validator for deployment
           NETWORK_URL="${{ inputs.solana-network-url }}"
