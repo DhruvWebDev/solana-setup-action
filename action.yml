@@ -32,12 +32,12 @@ inputs:
     default: ''
     
   solana-network-url:
-    description: 'Solana network url to use for deployment'
+    description: 'Solana network url to use for deployment (e.g., http://localhost:8899, https://api.devnet.solana.com, https://api.testnet.solana.com, https://api.mainnet-beta.solana.com)'
     required: false
-    default: 'localnet'
+    default: 'http://localhost:8899'
     
   solana-airdrop-amount:
-    description: 'Amount of SOL to airdrop to the wallet (only for localnet/devnet/testnet)'
+    description: 'Amount of SOL to airdrop to the wallet (only for localhost/devnet/testnet)'
     required: false
     default: '1'
     
@@ -109,8 +109,46 @@ runs:
         solana config set -u ${{ inputs.solana-network-url }}
         solana-keygen new --no-bip39-passphrase
         solana address
-        sleep 15
-        solana airdrop ${{ inputs.solana-airdrop-amount }}
+        
+        # Check network type and handle accordingly
+        NETWORK_URL="${{ inputs.solana-network-url }}"
+        
+        if [[ "$NETWORK_URL" == *"localhost"* ]] || [[ "$NETWORK_URL" == *"127.0.0.1"* ]]; then
+          echo "Setting up local development environment..."
+          echo "Network URL: $NETWORK_URL"
+          
+          # Start local validator first
+          echo "Starting local Solana validator..."
+          solana-test-validator --detach
+          sleep 15
+          echo "Local validator started successfully"
+          
+          # Update config to point to local validator (use default port if custom)
+          if [[ "$NETWORK_URL" == *"localhost"* ]]; then
+            solana config set -u "$NETWORK_URL"
+          else
+            solana config set -u http://localhost:8899
+          fi
+          
+          # Now airdrop will work with local validator
+          echo "Airdropping ${{ inputs.solana-airdrop-amount }} SOL..."
+          solana airdrop ${{ inputs.solana-airdrop-amount }}
+          
+        else
+          echo "Using remote network: $NETWORK_URL"
+          
+          # For devnet/testnet/mainnet-beta - direct airdrop
+          if [[ "$NETWORK_URL" == *"devnet"* ]] || [[ "$NETWORK_URL" == *"testnet"* ]]; then
+            echo "Airdropping ${{ inputs.solana-airdrop-amount }} SOL on remote network..."
+            solana airdrop ${{ inputs.solana-airdrop-amount }}
+          elif [[ "$NETWORK_URL" == *"mainnet"* ]]; then
+            echo "Mainnet detected - skipping airdrop (not available on mainnet)"
+          else
+            echo "Unknown network, attempting airdrop..."
+            solana airdrop ${{ inputs.solana-airdrop-amount }}
+          fi
+        fi
+        
         solana balance
 
     # 4️⃣ Install Anchor CLI via AVM
@@ -208,6 +246,28 @@ runs:
         if [ -n "${{ inputs.test-script }}" ]; then
           echo "Running tests: ${{ inputs.test-script }}"
           cd "${{ inputs.working-directory }}"
+          
+          # Check if we need local validator for testing
+          NETWORK_URL="${{ inputs.solana-network-url }}"
+          
+          if [[ "$NETWORK_URL" == *"localhost"* ]] || [[ "$NETWORK_URL" == *"127.0.0.1"* ]]; then
+            echo "Ensuring local validator is running for tests..."
+            
+            # Check if validator is already running
+            if ! pgrep -f "solana-test-validator" > /dev/null; then
+              echo "Local validator not found, starting it..."
+              solana-test-validator --detach
+              sleep 15
+              echo "Local validator started for testing"
+            else
+              echo "Local validator is already running"
+            fi
+            
+            # Ensure config points to the specified local validator URL
+            solana config set -u "$NETWORK_URL"
+          fi
+          
+          # Run the test script
           eval "${{ inputs.test-script }}"
         else
           echo "Skipping test step as no script was provided."
@@ -220,6 +280,28 @@ runs:
         if [ -n "${{ inputs.deploy-script }}" ]; then
           echo "Running deploy: ${{ inputs.deploy-script }}"
           cd "${{ inputs.working-directory }}"
+          
+          # Check if we need local validator for deployment
+          NETWORK_URL="${{ inputs.solana-network-url }}"
+          
+          if [[ "$NETWORK_URL" == *"localhost"* ]] || [[ "$NETWORK_URL" == *"127.0.0.1"* ]]; then
+            echo "Ensuring local validator is running for deployment..."
+            
+            # Check if validator is already running
+            if ! pgrep -f "solana-test-validator" > /dev/null; then
+              echo "Local validator not found, starting it..."
+              solana-test-validator --detach
+              sleep 15
+              echo "Local validator started for deployment"
+            else
+              echo "Local validator is already running"
+            fi
+            
+            # Ensure config points to the specified local validator URL
+            solana config set -u "$NETWORK_URL"
+          fi
+          
+          # Run the deployment script
           eval "${{ inputs.deploy-script }}"
         else
           echo "Skipping deploy step as no script was provided."
