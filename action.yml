@@ -30,15 +30,32 @@ inputs:
     description: 'Yarn version to install'
     required: false
     default: ''
-
+    
+  solana-network:
+    description: 'Solana network to use for deployment (e.g., localnet, devnet, mainnet-beta, testnet)'
+    required: false
+    default: 'localnet'
+    
+  solana-airdrop-amount:
+    description: 'Amount of SOL to airdrop to the wallet (only for localnet/devnet/testnet)'
+    required: false
+    default: '1'
+    
+  solana-wallet-setup:
+    description: 'Script/command to set up the wallet, airdrop SOL for testing, and deploy the contract (e.g., ./scripts/setup-wallet.sh)'
+    required: false
+    default: ''
+    
   build-script:
     description: 'Script/command to build the project (e.g., anchor build)'
     required: false
     default: ''
+    
   test-script:
     description: 'Script/command to test the project (e.g., anchor test)'
     required: false
     default: ''
+    
   deploy-script:
     description: 'Script/command to deploy the project (e.g., anchor deploy)'
     required: false
@@ -84,13 +101,30 @@ runs:
           echo "Skipping Solana CLI installation as no version was provided."
         fi
 
+    # 3️⃣.1 Solana Wallet Setup and Local Validator
+    - name: Setup Solana Wallet & Local Validator
+      shell: bash
+      run: |
+        solana config get
+        solana config set -u ${{ inputs.solana-network }}
+        solana-keygen new --no-bip39-passphrase
+        solana address
+        if [ "${{ inputs.solana-network }}" = "localnet" ]; then
+          solana-test-validator --reset --quiet &
+          sleep 15
+          solana airdrop ${{ inputs.solana-airdrop-amount }}
+          solana balance
+        else
+          echo "Not using local network, skipping test validator and airdrop."
+        fi
+
     # 4️⃣ Install Anchor CLI via AVM
     - name: Install Anchor CLI
       shell: bash
       run: |
         if [ -n "${{ inputs.anchor-version }}" ]; then
-        cargo install --git https://github.com/coral-xyz/anchor --tag ${{ inputs.anchor-version }} anchor-cli
-        anchor --version
+          cargo install --git https://github.com/coral-xyz/anchor --tag ${{ inputs.anchor-version }} anchor-cli
+          anchor --version
         else
           echo "Skipping Anchor CLI installation as no version was provided."
         fi
@@ -137,7 +171,19 @@ runs:
           echo "No package.json found, skipping dependency installation."
         fi
 
-    # 7️⃣ Run Sec3 X-Ray analysis (optional)
+    # 8️⃣ Wallet setup, airdrop, and deploy (optional)
+    - name: Solana Wallet Setup & Airdrop
+      shell: bash
+      run: |
+        if [ -n "${{ inputs.solana-wallet-setup }}" ]; then
+          echo "Running wallet setup: ${{ inputs.solana-wallet-setup }}"
+          cd "${{ inputs.working-directory }}"
+          eval "${{ inputs.solana-wallet-setup }}"
+        else
+          echo "Skipping wallet setup as no script was provided."
+        fi
+
+    # 9️⃣ Run Sec3 X-Ray analysis (optional)
     - name: Run Sec3 X-Ray
       if: ${{ inputs.x-ray-enabled == 'true' }}
       shell: bash
@@ -148,7 +194,7 @@ runs:
           ghcr.io/sec3-product/x-ray:latest \
           /project
 
-    # 8️⃣ Build step (optional)
+    # 🔟 Build step (optional)
     - name: Build Project
       shell: bash
       run: |
@@ -160,7 +206,7 @@ runs:
           echo "Skipping build step as no script was provided."
         fi
 
-    # 9️⃣ Test step (optional)
+    # 1️⃣1️⃣ Test step (optional)
     - name: Test Project
       shell: bash
       run: |
@@ -172,7 +218,7 @@ runs:
           echo "Skipping test step as no script was provided."
         fi
 
-    # 🔟 Deploy step (optional)
+    # 1️⃣2️⃣ Deploy step (optional)
     - name: Deploy Project
       shell: bash
       run: |
