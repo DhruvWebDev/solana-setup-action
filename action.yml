@@ -253,16 +253,6 @@ runs:
           if [[ "$NETWORK_URL" == *"localhost"* ]] || [[ "$NETWORK_URL" == *"127.0.0.1"* ]]; then
             echo "Ensuring local validator is running for tests..."
             
-            # Check if validator is already running
-            if ! pgrep -f "solana-test-validator" > /dev/null; then
-              echo "Local validator not found, starting it..."
-              solana-test-validator  --quiet &
-              sleep 15
-              echo "Local validator started for testing"
-            else
-              echo "Local validator is already running"
-            fi
-            
             # Ensure config points to the specified local validator URL
             solana config set -u "$NETWORK_URL"
           fi
@@ -286,16 +276,6 @@ runs:
           
           if [[ "$NETWORK_URL" == *"localhost"* ]] || [[ "$NETWORK_URL" == *"127.0.0.1"* ]]; then
             echo "Ensuring local validator is running for deployment..."
-            
-            # Check if validator is already running
-            if ! pgrep -f "solana-test-validator" > /dev/null; then
-              echo "Local validator not found, starting it..."
-              solana-test-validator --quiet
-              sleep 15
-              echo "Local validator started for deployment"
-            else
-              echo "Local validator is already running"
-            fi
             
             # Ensure config points to the specified local validator URL
             solana config set -u "$NETWORK_URL"
