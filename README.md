@@ -13,6 +13,7 @@
 ✅ Installs **pnpm** and **Yarn** if needed  
 ✅ Setup **x-ray**(static analysis) to identify vulnerability in the contract
 ✅ Works in all Linux-based GitHub runners
+✅ Build, Test and Deploy script feature
 
 ---
 
@@ -20,29 +21,33 @@
 
 ```yaml
 # .github/workflows/solana.yml
-name: Solana CI
-
-on: [push]
+name:  CI
+on:
+  pull_request:
+    branches: [ "main" ]
+  push:
+    branches: [ "main" ]
 
 jobs:
-  setup-solana:
+  build-and-test-program:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Setup Solana Environment 🌞
-        uses: DhruvWebDev/solana-setup-action@v0.0.7
+      
+      - name: Setup Solana Environment
+        uses: DhruvWebDev/solana-setup-action@v0.1.8
         with:
-          node-version: '18'
-          solana-cli-version: '1.18.18'
-          anchor-version: '0.30.1'
-          pnpm-package-manager: '8.15.5'
-          yarn-package-manager: '1.22.19'
+          node-version: '20'
+          solana-cli-version: '1.18.26'
+          anchor-version: 'v0.31.1'
+          solana-network-url: 'http://localhost:8899'
+          solana-airdrop-amount: '100'
+          solana-wallet-setup: true
+          build-script: 'anchor build'
+          # Add --skip-local-validator else the build would fail and another tip is to add --skip-build flag to fasten up the workflow because we have already built it in the anchor build
+          test-script: 'anchor test  --skip-local-validator --skip-build'
+          deploy-script: 'anchor deploy --skip-local-validator --skip-build'
           x-ray-enabled: true
-          working-directory: ./path
-
-      - name: Check Solana Installation
-        run: |
-          solana --version
-          anchor --version
+          working-directory: './dir'
+```
